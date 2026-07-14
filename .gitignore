@@ -1,0 +1,8 @@
+# Business records — never commit these.
+# Customer names, emails, phone numbers. Same rule as the W9.
+*.csv
+jobs*.csv
+welder-jobs*.csv
+*.mbox
+*.eml
+emails/

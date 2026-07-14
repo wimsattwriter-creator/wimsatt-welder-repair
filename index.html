@@ -136,6 +136,12 @@
   .choice:hover{border-color:#48505e}
   .choice input{margin:3px 0 0;accent-color:var(--arc);flex:none}
   .req{color:var(--arc)}
+  .fieldnote{
+    margin:4px 0 6px;padding:11px 13px;
+    background:rgba(91,143,199,.09);border:1px solid rgba(91,143,199,.28);
+    border-radius:8px;color:var(--ink-dim);font-size:14px;line-height:1.55;
+  }
+  .fieldnote b{color:var(--steel)}
   button[type=submit]{
     width:100%;padding:15px;margin-top:4px;
     background:var(--arc);color:#1a1205;
@@ -303,6 +309,11 @@
         </label>
         <input type="text" id="makemodel" name="make_model" required placeholder="e.g. Hobart Champion 10,000">
 
+        <label for="serial">Serial number
+          <span class="hint">On the data plate, next to the model. This tells me which version of your machine I'm dealing with &mdash; it matters more than you'd think.</span>
+        </label>
+        <input type="text" id="serial" name="serial">
+
         <label for="age">Roughly how old is it?</label>
         <select id="age" name="age">
           <option value="">Choose one&hellip;</option>
@@ -311,6 +322,54 @@
           <option>15&ndash;30 years</option>
           <option>Older than 30 years</option>
           <option>No idea</option>
+        </select>
+      </fieldset>
+
+      <fieldset>
+        <legend>Readings, if you can get them</legend>
+        <p class="fieldnote">
+          If you have a meter and know how to use it safely, these four answers tell me more
+          than anything else on this page &mdash; they often point straight at the failed part
+          before I ever see the machine. <b>If you don't have a meter, or you're not sure, leave
+          these blank and say so.</b> Do not go poking around inside a machine you aren't
+          comfortable with. It isn't worth getting hurt over.
+        </p>
+
+        <label for="v120">Voltage at the 120&nbsp;volt outlet
+          <span class="hint">What does the meter actually read? "Nothing" and "zero" are useful answers.</span>
+        </label>
+        <input type="text" id="v120" name="volts_120" placeholder="e.g. 118, or 0, or no meter">
+
+        <label for="v240">Voltage at the 240&nbsp;volt outlet</label>
+        <input type="text" id="v240" name="volts_240" placeholder="e.g. 237, or 0, or no meter">
+
+        <label for="vleads">Voltage across the welder leads
+          <span class="hint">Open circuit &mdash; machine running, leads not touching anything.</span>
+        </label>
+        <input type="text" id="vleads" name="volts_leads" placeholder="e.g. 78, or 0, or no meter">
+
+        <label for="idle">Does it idle correctly?
+          <span class="hint">Does it drop to low idle on its own, and come up when you strike an arc?</span>
+        </label>
+        <select id="idle" name="idle">
+          <option value="">Choose one&hellip;</option>
+          <option>Yes &mdash; idles down and comes back up normally</option>
+          <option>No &mdash; it stays at high idle all the time</option>
+          <option>No &mdash; it won't come up off low idle</option>
+          <option>It hunts / surges / can't settle</option>
+          <option>Engine won't run long enough to tell</option>
+          <option>Not sure</option>
+        </select>
+
+        <label for="jump">Has this machine ever been jump-started, or used to jump-start something else?
+          <span class="hint">Be straight with me on this one. It's not a trick question and you're not in trouble &mdash; but a bad jump can take out parts that nothing else touches, and knowing saves us both a lot of hunting.</span>
+        </label>
+        <select id="jump" name="jumpstarted">
+          <option value="">Choose one&hellip;</option>
+          <option>Yes &mdash; and the trouble started right after</option>
+          <option>Yes &mdash; but a while back, seemed fine after</option>
+          <option>No, never</option>
+          <option>Not sure &mdash; I've not had it its whole life</option>
         </select>
       </fieldset>
 
@@ -409,10 +468,12 @@
   // is a little harder for spam harvesters to scrape.
   var ADDRESS = ['wimsattwelder', 'gmail.com'].join('@');
 
-  // A mailto: address is a URL, and browsers/mail clients quietly truncate long
-  // ones. Past this many characters we hand over a short mailto and let the
-  // customer copy the full text from the page instead of silently losing it.
-  var MAILTO_SAFE_LENGTH = 1800;
+  // A mailto: is a URL, and mail clients quietly truncate long ones. Measured
+  // against the encoded length, since escaping every newline and space roughly
+  // doubles it. Modern mail clients handle this comfortably; past it we hand
+  // over a short mailto and let the customer paste, rather than silently
+  // dropping half their message.
+  var MAILTO_SAFE_LENGTH = 6000;
 
   var form     = document.getElementById('survey-form');
   var handoff  = document.getElementById('handoff');
@@ -434,15 +495,28 @@
     return /[?:]$/.test(text) ? text : text + ':';
   }
 
-  function buildMessage() {
+  // Job number. Ties this intake to the outcome you record later — without a
+  // shared key, the intake survey and the finished job are two unrelated piles
+  // of paper and no statistics are possible.
+  function makeJobId() {
+    var now = new Date();
+    var yy  = String(now.getFullYear()).slice(2);
+    var mm  = String(now.getMonth() + 1).padStart(2, '0');
+    var rand = Math.floor(Math.random() * 36 * 36 * 36).toString(36).toUpperCase().padStart(3, '0');
+    return 'WWR-' + yy + mm + '-' + rand;
+  }
+
+  function buildMessage(jobId) {
     var data = new FormData(form);
     var lines = [];
+    var record = { job_id: jobId, submitted: new Date().toISOString().slice(0, 10) };
 
     form.querySelectorAll('input[type=text], input[type=email], input[type=tel], select, textarea')
       .forEach(function (field) {
         if (!field.name || field.id === 'composed') return;
         var value = (data.get(field.name) || '').toString().trim();
         if (!value) return;
+        record[field.name] = value;
         lines.push(labelFor(field));
         lines.push('  ' + value.replace(/\n/g, '\n  '));
         lines.push('');
@@ -450,25 +524,41 @@
 
     var symptoms = data.getAll('symptoms');
     if (symptoms.length) {
-      lines.splice(lines.length, 0, 'What it is doing:');
+      record.symptoms = symptoms;
+      lines.push('What it is doing:');
       symptoms.forEach(function (s) { lines.push('  - ' + s); });
       lines.push('');
     }
 
-    return 'Sent from the Wimsatt Welder Repair website.\n\n' + lines.join('\n').trim() + '\n';
+    // Machine-readable copy of the same answers. A script can lift this straight
+    // out of the saved email and turn a year of jobs into a spreadsheet.
+    // See tools/intake_to_csv.py in the repository.
+    var block =
+      '----- WWR-DATA v1 (for record keeping - please leave this alone) -----\n' +
+      JSON.stringify(record) + '\n' +
+      '----- END WWR-DATA -----';
+
+    return 'Sent from the Wimsatt Welder Repair website.\n' +
+           'Job number: ' + jobId + '\n\n' +
+           lines.join('\n').trim() + '\n\n' +
+           block + '\n';
   }
 
-  function openMailClient(subject, body) {
+  function openMailClient(subject, body, jobId) {
     var url = 'mailto:' + ADDRESS +
               '?subject=' + encodeURIComponent(subject) +
               '&body=' + encodeURIComponent(body);
 
     if (url.length > MAILTO_SAFE_LENGTH) {
+      // Too long to survive a mail link. Send a stub and let the customer paste
+      // the full text — but keep the job number, which must never be lost.
       url = 'mailto:' + ADDRESS +
             '?subject=' + encodeURIComponent(subject) +
             '&body=' + encodeURIComponent(
-              'My full message is on the Wimsatt Welder Repair web page — ' +
-              'please paste it in below this line.\n\n'
+              'My message was too long to carry over automatically.\n' +
+              'It is waiting on the Wimsatt Welder Repair web page — ' +
+              'please paste it in below this line.\n\n' +
+              '(Job number ' + jobId + ')\n\n'
             );
     }
 
@@ -486,8 +576,9 @@
     event.preventDefault();
 
     var name = (new FormData(form).get('name') || '').toString().trim();
-    var subject = 'Welder repair request' + (name ? ' — ' + name : '');
-    var body = buildMessage();
+    var jobId = makeJobId();
+    var subject = 'Welder repair request ' + jobId + (name ? ' — ' + name : '');
+    var body = buildMessage(jobId);
 
     composed.value = 'To: ' + ADDRESS + '\nSubject: ' + subject + '\n\n' + body;
 
@@ -497,9 +588,9 @@
     // There is no way for a web page to learn whether the mail program actually
     // opened, so we always show the copy-it-yourself panel above rather than
     // leaving anyone stranded at a button that appeared to do nothing.
-    openMailClient(subject, body);
+    openMailClient(subject, body, jobId);
 
-    retryBtn.onclick = function () { openMailClient(subject, body); };
+    retryBtn.onclick = function () { openMailClient(subject, body, jobId); };
   });
 
   copyBtn.addEventListener('click', function () {
