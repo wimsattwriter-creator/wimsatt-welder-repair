@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wimsatt Welder Repair &mdash; Stick &amp; Engine-Driven Welder Service | Seguin, Texas</title>
+<meta name="description" content="Independent repair for stick/arc welders and engine-driven welder-generators. Northern Seguin, Texas. Tell me what's wrong and I'll tell you straight whether I can fix it.">
+
+<meta property="og:title" content="Wimsatt Welder Repair — Seguin, Texas">
+<meta property="og:description" content="Stick/arc and engine-driven welder repair. Describe your problem and get an honest answer on whether it's worth fixing.">
+<meta property="og:type" content="website">
+
+<style>
+  :root{
+    --bg:#14161a;
+    --panel:#1c1f25;
+    --panel-2:#22262e;
+    --line:#333944;
+    --ink:#eef1f5;
+    --ink-dim:#a2abb8;
+    --arc:#ff9d2f;
+    --arc-hot:#ffbe63;
+    --steel:#5b8fc7;
+    --ok:#4caf7d;
+    --err:#e0603f;
+    --radius:10px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:0 20px}
+
+  /* ---------- Hero ---------- */
+  header.hero{
+    background:
+      radial-gradient(900px 380px at 50% -12%, rgba(255,157,47,.16), transparent 62%),
+      linear-gradient(180deg,#191c22,#14161a);
+    border-bottom:1px solid var(--line);
+    padding:56px 0 44px;
+    text-align:center;
+  }
+  .spark{
+    display:inline-block;font-size:13px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--arc);font-weight:700;margin-bottom:14px;
+  }
+  h1{
+    margin:0 0 14px;
+    font-size:clamp(30px,6vw,44px);
+    line-height:1.14;
+    letter-spacing:-.02em;
+  }
+  h1 em{font-style:normal;color:var(--arc)}
+  .sub{
+    margin:0 auto 26px;max-width:560px;
+    font-size:clamp(16px,2.4vw,18px);color:var(--ink-dim);
+  }
+  .cta{
+    display:inline-block;background:var(--arc);color:#1a1205;
+    font-weight:750;font-size:17px;text-decoration:none;
+    padding:15px 30px;border-radius:var(--radius);
+    box-shadow:0 6px 22px rgba(255,157,47,.24);
+    transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
+  }
+  .cta:hover{background:var(--arc-hot);transform:translateY(-1px);box-shadow:0 9px 28px rgba(255,157,47,.32)}
+  .cta-note{margin-top:12px;font-size:13.5px;color:var(--ink-dim)}
+
+  /* ---------- Sections ---------- */
+  section{padding:44px 0;border-bottom:1px solid var(--line)}
+  h2{font-size:23px;margin:0 0 8px;letter-spacing:-.01em}
+  .lede{color:var(--ink-dim);margin:0 0 22px}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:620px){.grid{grid-template-columns:1fr}}
+  .card{
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--radius);padding:18px 20px;
+  }
+  .card h3{margin:0 0 6px;font-size:16.5px;color:var(--arc)}
+  .card p{margin:0;color:var(--ink-dim);font-size:15px}
+  .card.no h3{color:var(--ink-dim)}
+
+  .rates{
+    background:var(--panel-2);border:1px solid var(--line);
+    border-left:3px solid var(--arc);
+    border-radius:var(--radius);padding:20px 22px;
+  }
+  .rates ul{margin:0;padding-left:20px}
+  .rates li{margin:7px 0}
+  .rates strong{color:var(--arc-hot)}
+
+  ol.steps{counter-reset:s;list-style:none;padding:0;margin:0}
+  ol.steps li{
+    counter-increment:s;position:relative;
+    padding:0 0 20px 46px;margin:0;color:var(--ink-dim);
+  }
+  ol.steps li::before{
+    content:counter(s);position:absolute;left:0;top:-2px;
+    width:30px;height:30px;border-radius:50%;
+    background:var(--panel-2);border:1px solid var(--line);
+    color:var(--arc);font-weight:750;font-size:14px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  ol.steps li b{color:var(--ink);display:block;font-weight:650}
+
+  /* ---------- Form ---------- */
+  form{margin-top:8px}
+  fieldset{
+    border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px 20px;margin:0 0 16px;background:var(--panel);
+  }
+  legend{padding:0 8px;font-weight:700;font-size:14px;color:var(--arc);letter-spacing:.04em;text-transform:uppercase}
+  label{display:block;margin:14px 0 6px;font-weight:600;font-size:14.5px}
+  label:first-of-type{margin-top:4px}
+  .hint{font-weight:400;color:var(--ink-dim);font-size:13px;display:block;margin-top:2px}
+  input[type=text],input[type=email],input[type=tel],select,textarea{
+    width:100%;padding:11px 12px;
+    background:#111318;color:var(--ink);
+    border:1px solid var(--line);border-radius:8px;
+    font:inherit;font-size:15.5px;
+  }
+  textarea{min-height:110px;resize:vertical}
+  input:focus,select:focus,textarea:focus{
+    outline:none;border-color:var(--arc);box-shadow:0 0 0 3px rgba(255,157,47,.16);
+  }
+  .choice{
+    display:flex;gap:10px;align-items:flex-start;
+    padding:10px 12px;margin:7px 0;
+    background:#111318;border:1px solid var(--line);border-radius:8px;
+    cursor:pointer;font-weight:400;font-size:15px;
+  }
+  .choice:hover{border-color:#48505e}
+  .choice input{margin:3px 0 0;accent-color:var(--arc);flex:none}
+  .req{color:var(--arc)}
+  button[type=submit]{
+    width:100%;padding:15px;margin-top:4px;
+    background:var(--arc);color:#1a1205;
+    border:0;border-radius:var(--radius);
+    font:inherit;font-size:17px;font-weight:750;cursor:pointer;
+  }
+  button[type=submit]:hover{background:var(--arc-hot)}
+  button[type=submit]:disabled{opacity:.6;cursor:progress}
+
+  .privacy{
+    margin-top:14px;padding:13px 15px;
+    background:rgba(91,143,199,.09);
+    border:1px solid rgba(91,143,199,.3);
+    border-radius:8px;font-size:14px;color:var(--ink-dim);
+  }
+  .privacy b{color:var(--steel)}
+
+  #status{margin-top:14px;padding:14px 16px;border-radius:8px;font-weight:600;display:none}
+  #status.ok{display:block;background:rgba(76,175,125,.12);border:1px solid var(--ok);color:#8fe0b6}
+  #status.err{display:block;background:rgba(224,96,63,.12);border:1px solid var(--err);color:#f0a48d}
+
+  footer{padding:30px 0 44px;text-align:center;color:var(--ink-dim);font-size:14px}
+  footer p{margin:5px 0}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="spark">Northern Seguin &middot; Guadalupe County, Texas</span>
+    <h1>Your welder quit.<br><em>Let's find out why.</em></h1>
+    <p class="sub">
+      Independent repair for stick&nbsp;/&nbsp;arc welders and engine-driven welder-generators.
+      Tell me what it's doing and I'll tell you straight whether I can fix it &mdash;
+      and whether it's worth fixing.
+    </p>
+    <a class="cta" href="#survey">Describe your problem &rarr;</a>
+    <p class="cta-note">Takes about two minutes. No cost, no obligation.</p>
+  </div>
+</header>
+
+<main>
+
+<section>
+  <div class="wrap">
+    <h2>What I work on</h2>
+    <p class="lede">I'd rather turn down a job than take your money on a machine I can't help.</p>
+    <div class="grid">
+      <div class="card">
+        <h3>Stick / arc welders</h3>
+        <p>Shop, farm, and industrial transformer machines. Thyristor and silicon-controlled-rectifier control boards included &mdash; this is the deep end and I'm comfortable in it.</p>
+      </div>
+      <div class="card">
+        <h3>Engine-driven welder-generators</h3>
+        <p>Gas and diesel welder-generators. Brushes, slip rings, exciters, control circuits, output problems, and the engine-to-generator handoff.</p>
+      </div>
+      <div class="card no">
+        <h3>Not my table</h3>
+        <p>Inverter-based machines with no parts support, and anything so far gone the parts cost more than a working replacement. I'll say so early.</p>
+      </div>
+      <div class="card no">
+        <h3>Honest answers first</h3>
+        <p>If the survey tells me your machine is a lost cause, I'll write back and tell you that instead of booking an evaluation you don't need.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>How it works</h2>
+    <p class="lede">Straightforward, and nobody wastes a trip.</p>
+    <ol class="steps">
+      <li><b>You fill out the survey below</b>Make, model, and what it's actually doing wrong. Photos of the data plate help more than anything else you can send me.</li>
+      <li><b>I read it and reply by email</b>I'll tell you whether it's in my wheelhouse, what I suspect is wrong, and roughly what it takes to find out for sure.</li>
+      <li><b>If it's a fit, we talk</b>That's when I share my phone number and shop location &mdash; and we work out rates before anybody turns a wrench.</li>
+      <li><b>You bring it to me, if you can</b>Drop-off is how I do my best work. I have my tools, my meters, and my references here.</li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Rates &amp; the mobile question</h2>
+    <p class="lede">Posted up front so there are no surprises on the phone.</p>
+    <div class="rates">
+      <ul>
+        <li><strong>Drop-off is strongly preferred.</strong> Bring the machine to me in northern Seguin and you get my full bench, my meters, and my full attention. This is where I can actually fix things.</li>
+        <li><strong>Mobile visits are evaluation only.</strong> If I come to you, I can diagnose &mdash; I can't do a real repair out of a truck bed. Expect to haul it in afterward anyway.</li>
+        <li><strong>Basic on-site evaluation: $200 for two hours</strong>, plus <strong>48&cent; per mile</strong> from northern Seguin, Texas.</li>
+        <li><strong>You need to be close.</strong> I don't travel far for evaluations. If you're a long haul out, drop-off is your only realistic option.</li>
+        <li><strong>Repair rates get worked out between us</strong> once I know what the machine actually needs. Every job is different and I won't pretend otherwise.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="survey">
+  <div class="wrap">
+    <h2>Tell me about your welder</h2>
+    <p class="lede">
+      The more you tell me here, the better an answer I can give you. Fields marked
+      <span class="req">*</span> are required.
+    </p>
+
+    <!--
+      ============================================================
+      SETUP: replace YOUR_FORM_ID below with the ID Formspree gives
+      you. See README.md, "Step 2". Nothing else needs to change.
+      ============================================================
+    -->
+    <form id="survey-form" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+
+      <fieldset>
+        <legend>How to reach you</legend>
+
+        <label for="name">Your name <span class="req">*</span></label>
+        <input type="text" id="name" name="name" required autocomplete="name">
+
+        <label for="email">Email <span class="req">*</span>
+          <span class="hint">This is where my reply goes, so double-check it.</span>
+        </label>
+        <input type="email" id="email" name="email" required autocomplete="email">
+
+        <label for="phone">Phone <span class="hint">Optional. Email works fine for a first pass.</span></label>
+        <input type="tel" id="phone" name="phone" autocomplete="tel">
+
+        <label for="location">What town are you in? <span class="req">*</span>
+          <span class="hint">This decides whether a mobile evaluation is even on the table.</span>
+        </label>
+        <input type="text" id="location" name="location" required placeholder="e.g. Cibolo, TX">
+      </fieldset>
+
+      <fieldset>
+        <legend>The machine</legend>
+
+        <label for="type">What kind of welder is it? <span class="req">*</span></label>
+        <select id="type" name="welder_type" required>
+          <option value="">Choose one&hellip;</option>
+          <option>Stick / arc welder (transformer)</option>
+          <option>Engine-driven welder-generator (gas)</option>
+          <option>Engine-driven welder-generator (diesel)</option>
+          <option>Not sure &mdash; I'll describe it below</option>
+          <option>Something else</option>
+        </select>
+
+        <label for="makemodel">Make and model <span class="req">*</span>
+          <span class="hint">It's on the data plate. "I don't know" is an acceptable answer.</span>
+        </label>
+        <input type="text" id="makemodel" name="make_model" required placeholder="e.g. Hobart Champion 10,000">
+
+        <label for="age">Roughly how old is it?</label>
+        <select id="age" name="age">
+          <option value="">Choose one&hellip;</option>
+          <option>Under 5 years</option>
+          <option>5&ndash;15 years</option>
+          <option>15&ndash;30 years</option>
+          <option>Older than 30 years</option>
+          <option>No idea</option>
+        </select>
+      </fieldset>
+
+      <fieldset>
+        <legend>The problem</legend>
+
+        <label>What is it doing? <span class="req">*</span>
+          <span class="hint">Check everything that applies.</span>
+        </label>
+
+        <label class="choice"><input type="checkbox" name="symptoms" value="Won't start / no power at all"> Won't start, or no power at all</label>
+        <label class="choice"><input type="checkbox" name="symptoms" value="Runs but no weld output"> Engine runs / unit powers up, but there's no weld output</label>
+        <label class="choice"><input type="checkbox" name="symptoms" value="Weak or inconsistent arc"> Weak, sputtering, or inconsistent arc</label>
+        <label class="choice"><input type="checkbox" name="symptoms" value="Amperage control not working"> Amperage control does nothing, or jumps around</label>
+        <label class="choice"><input type="checkbox" name="symptoms" value="Overheats / shuts down"> Overheats or shuts itself down</label>
+        <label class="choice"><input type="checkbox" name="symptoms" value="Burning smell / smoke / visible damage"> Burning smell, smoke, or visible damage</label>
+        <label class="choice"><input type="checkbox" name="symptoms" value="Engine problem (engine-driven)"> Engine problem &mdash; won't run right, won't stay running</label>
+        <label class="choice"><input type="checkbox" name="symptoms" value="Something else"> Something else &mdash; described below</label>
+
+        <label for="story">Tell me the story <span class="req">*</span>
+          <span class="hint">When did it start? Did anything happen right before? Has anyone else already worked on it? That last one matters a lot.</span>
+        </label>
+        <textarea id="story" name="story" required></textarea>
+
+        <label for="urgency">How soon do you need it?</label>
+        <select id="urgency" name="urgency">
+          <option value="">Choose one&hellip;</option>
+          <option>It's dead in the water &mdash; work is stopped</option>
+          <option>Soon, but I can wait a week or two</option>
+          <option>No rush, whenever you can get to it</option>
+          <option>Just want to know if it's worth fixing at all</option>
+        </select>
+      </fieldset>
+
+      <fieldset>
+        <legend>Getting it to me</legend>
+
+        <label for="transport">Can you bring the machine to me? <span class="req">*</span>
+          <span class="hint">Drop-off in northern Seguin gets you my best work. Mobile is evaluation only, and it costs $200 for two hours plus 48&cent;/mile.</span>
+        </label>
+        <select id="transport" name="transport" required>
+          <option value="">Choose one&hellip;</option>
+          <option>Yes &mdash; I can haul it to you</option>
+          <option>Probably, with a little notice</option>
+          <option>No &mdash; I need you to come look at it, and I understand the evaluation rate</option>
+          <option>Not sure yet, let's talk about it</option>
+        </select>
+      </fieldset>
+
+      <!-- Sets the subject line of the email that lands in your inbox. -->
+      <input type="hidden" name="_subject" value="New welder repair request from the website">
+      <!-- Honeypot: bots fill this in, humans never see it. Formspree drops those. -->
+      <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+      <button type="submit">Send this to Wimsatt Welder Repair</button>
+
+      <div class="privacy">
+        <b>On privacy, both ways.</b> Your details go straight to my email and nowhere else &mdash;
+        no list, no resale, no newsletter. And you'll notice there's no phone number or address on
+        this page: that's on purpose. I read what you send, and if I can genuinely help you,
+        I reply with my contact information myself.
+      </div>
+
+      <div id="status" role="status" aria-live="polite"></div>
+    </form>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><strong>Wimsatt Welder Repair</strong> &middot; Northern Seguin, Texas</p>
+    <p>Stick / arc welders &amp; engine-driven welder-generators</p>
+    <p>Contact is by survey above &mdash; I answer every one.</p>
+  </div>
+</footer>
+
+<script>
+// Submit the form in the background so the customer never leaves the page.
+// Falls back to a normal Formspree redirect if fetch is unavailable.
+(function () {
+  var form   = document.getElementById('survey-form');
+  var status = document.getElementById('status');
+  var button = form.querySelector('button[type=submit]');
+
+  form.addEventListener('submit', function (event) {
+    if (form.action.indexOf('YOUR_FORM_ID') !== -1) {
+      event.preventDefault();
+      status.className = 'err';
+      status.textContent = 'This form isn’t connected yet — the Formspree ID is still a placeholder. See README.md, Step 2.';
+      return;
+    }
+
+    event.preventDefault();
+    button.disabled = true;
+    button.textContent = 'Sending…';
+    status.className = '';
+
+    fetch(form.action, {
+      method: 'POST',
+      body: new FormData(form),
+      headers: { Accept: 'application/json' }
+    })
+    .then(function (response) {
+      if (!response.ok) throw new Error('Formspree returned ' + response.status);
+      form.reset();
+      status.className = 'ok';
+      status.textContent = 'Got it — your survey is in my inbox. I read every one of these and I’ll email you back. If it turns out I can help, that’s when I’ll send you my phone number and where to bring it.';
+      button.textContent = 'Sent — thank you';
+    })
+    .catch(function () {
+      button.disabled = false;
+      button.textContent = 'Send this to Wimsatt Welder Repair';
+      status.className = 'err';
+      status.textContent = 'Something went wrong sending that. Give it another try in a moment — and if it keeps failing, email me directly at wimsattwelder@gmail.com.';
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
