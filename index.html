@@ -153,9 +153,31 @@
   }
   .privacy b{color:var(--steel)}
 
-  #status{margin-top:14px;padding:14px 16px;border-radius:8px;font-weight:600;display:none}
-  #status.ok{display:block;background:rgba(76,175,125,.12);border:1px solid var(--ok);color:#8fe0b6}
-  #status.err{display:block;background:rgba(224,96,63,.12);border:1px solid var(--err);color:#f0a48d}
+  /* ---------- Copy-it-yourself handoff panel ---------- */
+  #handoff{
+    margin-top:10px;padding:22px 24px;
+    background:var(--panel);
+    border:1px solid var(--arc);
+    border-left:3px solid var(--arc);
+    border-radius:var(--radius);
+  }
+  .handoff-head h3{margin:0 0 8px;font-size:19px;color:var(--arc-hot);line-height:1.35}
+  .handoff-head p{margin:0 0 16px;color:var(--ink-dim);font-size:15px}
+  .handoff-head a{color:var(--arc);font-weight:700}
+  #composed{
+    min-height:230px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:13.5px;line-height:1.55;background:#0e1014;
+  }
+  .handoff-actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+  .handoff-actions button{
+    flex:1 1 200px;padding:14px 18px;border-radius:var(--radius);
+    font:inherit;font-size:16px;font-weight:700;cursor:pointer;border:1px solid transparent;
+  }
+  .btn-primary{background:var(--arc);color:#1a1205}
+  .btn-primary:hover{background:var(--arc-hot)}
+  .btn-ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+  .btn-ghost:hover{border-color:var(--arc);color:var(--arc)}
+  #copy-note{margin:12px 0 0;min-height:22px;font-weight:650;font-size:14.5px;color:var(--ok)}
 
   footer{padding:30px 0 44px;text-align:center;color:var(--ink-dim);font-size:14px}
   footer p{margin:5px 0}
@@ -241,13 +263,7 @@
       <span class="req">*</span> are required.
     </p>
 
-    <!--
-      ============================================================
-      SETUP: replace YOUR_FORM_ID below with the ID Formspree gives
-      you. See README.md, "Step 2". Nothing else needs to change.
-      ============================================================
-    -->
-    <form id="survey-form" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+    <form id="survey-form">
 
       <fieldset>
         <legend>How to reach you</legend>
@@ -344,22 +360,36 @@
         </select>
       </fieldset>
 
-      <!-- Sets the subject line of the email that lands in your inbox. -->
-      <input type="hidden" name="_subject" value="New welder repair request from the website">
-      <!-- Honeypot: bots fill this in, humans never see it. Formspree drops those. -->
-      <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
-
-      <button type="submit">Send this to Wimsatt Welder Repair</button>
+      <button type="submit">Open this in my email &rarr;</button>
 
       <div class="privacy">
-        <b>On privacy, both ways.</b> Your details go straight to my email and nowhere else &mdash;
-        no list, no resale, no newsletter. And you'll notice there's no phone number or address on
-        this page: that's on purpose. I read what you send, and if I can genuinely help you,
-        I reply with my contact information myself.
+        <b>On privacy, both ways.</b> This site has no database and stores nothing. Pressing the
+        button just writes the email for you and hands it to your own mail program &mdash; you send
+        it yourself, so it goes to me and nowhere else. And you'll notice there's no phone number or
+        address on this page: that's on purpose. I read what you send, and if I can genuinely help
+        you, I reply with my contact information myself.
+      </div>
+    </form>
+
+    <!-- Shown after the survey is submitted: the composed message, ready to copy. -->
+    <div id="handoff" hidden>
+      <div class="handoff-head">
+        <h3>Your message is ready &mdash; and it should have just opened in your email.</h3>
+        <p>
+          If your mail program <em>didn't</em> open, nothing is broken and nothing is lost.
+          Your message is written out below. Copy it, paste it into whatever email you use,
+          and send it to me at <b><a id="mail-addr" href="#">&nbsp;</a></b>.
+        </p>
       </div>
 
-      <div id="status" role="status" aria-live="polite"></div>
-    </form>
+      <textarea id="composed" readonly aria-label="Your composed message"></textarea>
+
+      <div class="handoff-actions">
+        <button type="button" id="copy-btn" class="btn-primary">Copy the message</button>
+        <button type="button" id="retry-btn" class="btn-ghost">Try my email program again</button>
+      </div>
+      <p id="copy-note" role="status" aria-live="polite"></p>
+    </div>
   </div>
 </section>
 
@@ -374,44 +404,119 @@
 </footer>
 
 <script>
-// Submit the form in the background so the customer never leaves the page.
-// Falls back to a normal Formspree redirect if fetch is unavailable.
 (function () {
-  var form   = document.getElementById('survey-form');
-  var status = document.getElementById('status');
-  var button = form.querySelector('button[type=submit]');
+  // Assembled at runtime rather than written in the page source, so the address
+  // is a little harder for spam harvesters to scrape.
+  var ADDRESS = ['wimsattwelder', 'gmail.com'].join('@');
 
-  form.addEventListener('submit', function (event) {
-    if (form.action.indexOf('YOUR_FORM_ID') !== -1) {
-      event.preventDefault();
-      status.className = 'err';
-      status.textContent = 'This form isn’t connected yet — the Formspree ID is still a placeholder. See README.md, Step 2.';
-      return;
+  // A mailto: address is a URL, and browsers/mail clients quietly truncate long
+  // ones. Past this many characters we hand over a short mailto and let the
+  // customer copy the full text from the page instead of silently losing it.
+  var MAILTO_SAFE_LENGTH = 1800;
+
+  var form     = document.getElementById('survey-form');
+  var handoff  = document.getElementById('handoff');
+  var composed = document.getElementById('composed');
+  var copyBtn  = document.getElementById('copy-btn');
+  var retryBtn = document.getElementById('retry-btn');
+  var copyNote = document.getElementById('copy-note');
+  var mailAddr = document.getElementById('mail-addr');
+
+  mailAddr.textContent = ADDRESS;
+  mailAddr.href = 'mailto:' + ADDRESS;
+
+  function labelFor(field) {
+    var el = form.querySelector('label[for="' + field.id + '"]');
+    if (!el) return field.name;
+    // Keep the human-readable question; drop the "*" and any hint text.
+    var text = el.childNodes[0].textContent.replace(/\s*\*?\s*$/, '').trim();
+    // Several labels are questions, so only add a colon where it reads right.
+    return /[?:]$/.test(text) ? text : text + ':';
+  }
+
+  function buildMessage() {
+    var data = new FormData(form);
+    var lines = [];
+
+    form.querySelectorAll('input[type=text], input[type=email], input[type=tel], select, textarea')
+      .forEach(function (field) {
+        if (!field.name || field.id === 'composed') return;
+        var value = (data.get(field.name) || '').toString().trim();
+        if (!value) return;
+        lines.push(labelFor(field));
+        lines.push('  ' + value.replace(/\n/g, '\n  '));
+        lines.push('');
+      });
+
+    var symptoms = data.getAll('symptoms');
+    if (symptoms.length) {
+      lines.splice(lines.length, 0, 'What it is doing:');
+      symptoms.forEach(function (s) { lines.push('  - ' + s); });
+      lines.push('');
     }
 
-    event.preventDefault();
-    button.disabled = true;
-    button.textContent = 'Sending…';
-    status.className = '';
+    return 'Sent from the Wimsatt Welder Repair website.\n\n' + lines.join('\n').trim() + '\n';
+  }
 
-    fetch(form.action, {
-      method: 'POST',
-      body: new FormData(form),
-      headers: { Accept: 'application/json' }
-    })
-    .then(function (response) {
-      if (!response.ok) throw new Error('Formspree returned ' + response.status);
-      form.reset();
-      status.className = 'ok';
-      status.textContent = 'Got it — your survey is in my inbox. I read every one of these and I’ll email you back. If it turns out I can help, that’s when I’ll send you my phone number and where to bring it.';
-      button.textContent = 'Sent — thank you';
-    })
-    .catch(function () {
-      button.disabled = false;
-      button.textContent = 'Send this to Wimsatt Welder Repair';
-      status.className = 'err';
-      status.textContent = 'Something went wrong sending that. Give it another try in a moment — and if it keeps failing, email me directly at wimsattwelder@gmail.com.';
-    });
+  function openMailClient(subject, body) {
+    var url = 'mailto:' + ADDRESS +
+              '?subject=' + encodeURIComponent(subject) +
+              '&body=' + encodeURIComponent(body);
+
+    if (url.length > MAILTO_SAFE_LENGTH) {
+      url = 'mailto:' + ADDRESS +
+            '?subject=' + encodeURIComponent(subject) +
+            '&body=' + encodeURIComponent(
+              'My full message is on the Wimsatt Welder Repair web page — ' +
+              'please paste it in below this line.\n\n'
+            );
+    }
+
+    // Clicking a real link is handled more reliably than assigning to
+    // window.location, which some browsers ignore for non-http schemes.
+    var link = document.createElement('a');
+    link.href = url;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+
+    var name = (new FormData(form).get('name') || '').toString().trim();
+    var subject = 'Welder repair request' + (name ? ' — ' + name : '');
+    var body = buildMessage();
+
+    composed.value = 'To: ' + ADDRESS + '\nSubject: ' + subject + '\n\n' + body;
+
+    handoff.hidden = false;
+    handoff.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // There is no way for a web page to learn whether the mail program actually
+    // opened, so we always show the copy-it-yourself panel above rather than
+    // leaving anyone stranded at a button that appeared to do nothing.
+    openMailClient(subject, body);
+
+    retryBtn.onclick = function () { openMailClient(subject, body); };
+  });
+
+  copyBtn.addEventListener('click', function () {
+    function done() {
+      copyNote.textContent = 'Copied. Paste it into a new email to ' + ADDRESS + ' and send it.';
+    }
+    function manual() {
+      composed.focus();
+      composed.select();
+      copyNote.textContent = 'Select all of the text above and copy it (Ctrl+C, or ⌘+C on a Mac).';
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(composed.value).then(done).catch(manual);
+    } else {
+      manual();
+    }
   });
 })();
 </script>
